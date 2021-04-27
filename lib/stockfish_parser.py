@@ -9,7 +9,7 @@ from tqdm import tqdm
 
 DATA_FILEPATH = '../data/'
 STOCKFISH_FILEPATH = '../stockfish/stockfish_13_win_x64_avx2.exe'
-CSV_FILEPATH = '../data/parsed_games.csv'
+CSV_FILEPATH = '../data/parsed_games_big.csv'
 ERROR_FEN = '<| ERROR: incorrect FEN string format, '
 ERROR_FEATURE = '<| ERROR: incorrect feature length, '
 ERROR_CSV = '<| ERROR: incorrect length of csv row, '
@@ -102,6 +102,12 @@ def write_data_to_csv(data_list):
 
 
 def parse_data():
+    with open(CSV_FILEPATH, 'a') as fd:
+        fd.write('y')
+        for x in range(8*8*7):
+            fd.write(f',x{x}')
+        fd.write('\n')
+    fd.close()
     engine = chess.engine.SimpleEngine.popen_uci(STOCKFISH_FILEPATH)
     with open(DATA_FILEPATH + pgn_list[0]) as pgn:
         csv_list = []
@@ -132,7 +138,7 @@ def parse_data():
                 # (https://en.wikipedia.org/wiki/Forsyth%E2%80%93Edwards_Notation)
                 # everything coming after either 'b' or 'w' is trivial to us. We only care about the current board state and
                 # what player it is next to move. Castling rights, en-passant squares and 50-move rule are not interesting.
-        write_data_to_csv(csv_list)
+            write_data_to_csv(csv_list)
 
     ###
     # info = engine.analyse(board, chess.engine.Limit(depth=20))

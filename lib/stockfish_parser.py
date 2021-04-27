@@ -4,17 +4,16 @@ Last edited: 23/04-2021
 """
 import chess.engine
 import chess.pgn
-import random
 from tqdm import tqdm
 
 DATA_FILEPATH = '../data/'
 STOCKFISH_FILEPATH = '../stockfish/stockfish_13_win_x64_avx2.exe'
-CSV_FILEPATH = '../parsed_data/parsed_games_test.csv'
+CSV_FILEPATH = '../parsed_data/bigbatch.csv'
 ERROR_FEN = '<| ERROR: incorrect FEN string format, '
 ERROR_FEATURE = '<| ERROR: incorrect feature length, '
 ERROR_CSV = '<| ERROR: incorrect length of csv row, '
 ERROR_EVALUATION = '<| ERROR: could not evaluate position, '
-NUM_GAMES = 10
+NUM_GAMES = 1000
 NUM_FEATURES = 7
 
 pgn_list = ['ficsgamesdb_2020_chess_nomovetimes_201347.pgn',
@@ -118,10 +117,6 @@ def parse_data():
                 # print(f'\t\tNumber of moves processed [{idx + 1}]')
                 board.push(move)
                 fen = board.fen()
-                # If we randomly sample smaller than 0.5 we will skipp this position. Should speed up the parsing
-                # time by 50% on average. Lets hope this works.
-                if random.random() < 0.5:
-                    continue
                 # Ok we got the goods, but now how to take the FEN string and model it according to our data specification?
                 # We want to structure the data such that it has 8*8*7 features, i.e. dimensionality of the data is 448. The
                 # first 8x8 are to represent the board. And at each index in this, what we pretend to be a 2D matrix,
@@ -129,7 +124,7 @@ def parse_data():
                 # color of the piece. The final value dictates what colors turn it is to move. -1 meaning BLACK to move, and 1
                 # means that it is WHITE to move.
                 try:
-                    eval = str((engine.analyse(board, chess.engine.Limit(depth=20))['score'].white().score() / 100))
+                    eval = str((engine.analyse(board, chess.engine.Limit(depth=15))['score'].white().score() / 100))
                     csv_list.append(eval + parse_FEN(fen))
                 except:
                     print(ERROR_EVALUATION + 'moving on to next game ...')

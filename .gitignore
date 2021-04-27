@@ -1,2 +1,3 @@
 .idea/*
 data/*
+parsed_data/bigbatch.csv

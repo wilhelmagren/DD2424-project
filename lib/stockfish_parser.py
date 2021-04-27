@@ -9,7 +9,7 @@ from tqdm import tqdm
 
 DATA_FILEPATH = '../data/'
 STOCKFISH_FILEPATH = '../stockfish/stockfish_13_win_x64_avx2.exe'
-CSV_FILEPATH = '../data/parsed_games_big.csv'
+CSV_FILEPATH = '../parsed_data/parsed_games_test.csv'
 ERROR_FEN = '<| ERROR: incorrect FEN string format, '
 ERROR_FEATURE = '<| ERROR: incorrect feature length, '
 ERROR_CSV = '<| ERROR: incorrect length of csv row, '

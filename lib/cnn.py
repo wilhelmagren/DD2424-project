@@ -21,7 +21,7 @@ class CNN:
         self.verbose = verbose
         self.NUM_FEATURES = 7
         self.DEFAULT_MODEL_FILEPATH = '../model/CNN_weights'
-        self.DEFAULT_FILEPATH = '../parsed_data/100games.csv.gz'
+        self.DEFAULT_FILEPATH = '../parsed_data/1000games_batch1.csv.gz'
 
     def init_model(self):
         # conv2D :: n_filter=400, kernel=(4, 4)
@@ -62,9 +62,7 @@ class CNN:
             column_list.append(f'x{x}')
         train = pd.read_csv(filepath, compression=compression)
         x_train = train.loc[:, column_list]
-        print(x_train)
         y_train = train.loc[:, train.columns == 'y']
-        print(y_train)
         x_train = np.array(x_train)
         y_train = np.array(y_train)
         x_train, x_valid, y_train, y_valid = train_test_split(x_train, y_train, test_size=0.2)
@@ -75,6 +73,10 @@ class CNN:
         self.y_train = y_train
         self.y_validation = y_valid
         self.y_test = y_test
+        if self.verbose:
+            print(f'<|\t\tNumber of training samples :: {len(self.x_train)}')
+            print(f'<|\t\tNumber of training samples :: {len(self.x_validation)}')
+            print(f'<|\t\tNumber of training samples :: {len(self.x_test)}')
 
     def batch_train(self, optimizer=None, loss=None, n_epochs=10):
         if self.verbose:
@@ -105,6 +107,7 @@ class CNN:
                   f'\n\t\tlen(prediction)={len(y)} :: len(target)={len(self.y_test)}')
         acc = 0
         for (target, predicted) in zip(self.y_test, y):
+            print(f'target={target} :: predicted={predicted}')
             if target - offset <= predicted <= target + offset:
                 acc += 1
         print(f'<|\tModel testing accuracy: {100*round(float(acc)/float(len(y)), 4)}%')
@@ -116,8 +119,8 @@ def main():
     model.init_model()
     # model.load_model()
     model.parse_data()
-    model.batch_train(n_epochs=10)
-    model.save_model()
+    model.batch_train(n_epochs=30)
+    # model.save_model()
     model.plot_history()
     model.model_predict()
 

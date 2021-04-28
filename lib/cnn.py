@@ -19,8 +19,9 @@ class CNN:
         self.x_test = None
         self.y_test = None
         self.verbose = verbose
+        self.NUM_FEATURES = 7
         self.DEFAULT_MODEL_FILEPATH = '../model/CNN_weights'
-        self.DEFAULT_FILEPATH = '../parsed_data/parsed_games_test.csv'
+        self.DEFAULT_FILEPATH = '../parsed_data/100games.csv.gz'
 
     def init_model(self):
         # conv2D :: n_filter=400, kernel=(4, 4)
@@ -51,14 +52,19 @@ class CNN:
     def model_summary(self):
         self.model.summary()
 
-    def parse_data(self, filepath=None):
+    def parse_data(self, filepath=None, compression='gzip'):
         if filepath is None:
             filepath = self.DEFAULT_FILEPATH
         if self.verbose:
             print(f'<|\tParsing the data from filepath :: {filepath}')
-        train = pd.DataFrame(pd.read_csv(filepath))
-        x_train = train.loc[:, train.columns != 'y']
+        column_list = []
+        for x in range(self.NUM_FEATURES * 8 * 8):
+            column_list.append(f'x{x}')
+        train = pd.read_csv(filepath, compression=compression)
+        x_train = train.loc[:, column_list]
+        print(x_train)
         y_train = train.loc[:, train.columns == 'y']
+        print(y_train)
         x_train = np.array(x_train)
         y_train = np.array(y_train)
         x_train, x_valid, y_train, y_valid = train_test_split(x_train, y_train, test_size=0.2)
@@ -107,12 +113,12 @@ class CNN:
 def main():
     # ----- Unit testing -----
     model = CNN(verbose=True)
-    # model.init_model()
-    model.load_model()
+    model.init_model()
+    # model.load_model()
     model.parse_data()
-    # model.batch_train(n_epochs=3)
-    # model.save_model()
-    # model.plot_history()
+    model.batch_train(n_epochs=10)
+    model.save_model()
+    model.plot_history()
     model.model_predict()
 
 

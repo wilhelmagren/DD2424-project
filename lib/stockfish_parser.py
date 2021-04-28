@@ -5,10 +5,12 @@ Last edited: 23/04-2021
 import chess.engine
 import chess.pgn
 from tqdm import tqdm
+import pandas as pd
+import time
 
 DATA_FILEPATH = '../data/'
 STOCKFISH_FILEPATH = '../stockfish/stockfish_13_win_x64_avx2.exe'
-CSV_FILEPATH = '../parsed_data/bigbatch.csv'
+CSV_FILEPATH = '../parsed_data/1000games_batch1.csv.gz'
 ERROR_FEN = '<| ERROR: incorrect FEN string format, '
 ERROR_FEATURE = '<| ERROR: incorrect feature length, '
 ERROR_CSV = '<| ERROR: incorrect length of csv row, '
@@ -35,11 +37,15 @@ PIECE_IDX = {
     'k': 5,
     'K': 5
 }
+
 CLR_MOVE = {
     'b': -1,
     'w': 1
 }
+
 ZERO_FEATURE = [0 for _ in range(6)]
+
+MATED_VALUES = [-255.0, 255.0]
 
 
 def is_upper_case(s):
@@ -74,9 +80,6 @@ def parse_FEN(s):
                 fen_board[idx][cnt][PIECE_IDX[pce]] = is_upper_case(pce)
             cnt += 1
 
-    # Ok now we have the one hot encoding
-    # Append the player which turn it is to move. This might act as some type of bias?
-    # So maybe we don't have to add bias later... Food for thought.
     csv_format_s = ''
     for idx in range(8):
         for jdx in range(8):
@@ -93,47 +96,49 @@ def parse_FEN(s):
     return csv_format_s
 
 
-def write_data_to_csv(data_list):
-    with open(CSV_FILEPATH, 'a') as fd:
-        for position in data_list:
-            fd.write(position + '\n')
-        fd.close()
+def write_data_to_csv(dataframe):
+    print(dataframe)
+    dataframe.to_csv(CSV_FILEPATH, compression='gzip')
 
 
 def parse_data():
-    with open(CSV_FILEPATH, 'a') as fd:
-        fd.write('y')
-        for x in range(8*8*7):
-            fd.write(f',x{x}')
-        fd.write('\n')
-    fd.close()
+    column_list = ['y']
+    for x in range(NUM_FEATURES*8*8):
+        column_list.append(f'x{x}')
+    main_df = pd.DataFrame(columns=column_list)
     engine = chess.engine.SimpleEngine.popen_uci(STOCKFISH_FILEPATH)
     with open(DATA_FILEPATH + pgn_list[0]) as pgn:
-        csv_list = []
         for _ in tqdm(range(NUM_GAMES)):
             game = chess.pgn.read_game(pgn)
             board = game.board()
             for idx, move in enumerate(game.mainline_moves()):
-                # print(f'\t\tNumber of moves processed [{idx + 1}]')
                 board.push(move)
                 fen = board.fen()
-                # Ok we got the goods, but now how to take the FEN string and model it according to our data specification?
-                # We want to structure the data such that it has 8*8*7 features, i.e. dimensionality of the data is 448. The
-                # first 8x8 are to represent the board. And at each index in this, what we pretend to be a 2D matrix,
-                # we will have 7 values. The first six of these are one-hot coded representations both the piece type and the
-                # color of the piece. The final value dictates what colors turn it is to move. -1 meaning BLACK to move, and 1
-                # means that it is WHITE to move.
+                dic = {}
+                to_move = CLR_MOVE[fen.split(' ')[1]]
+                eval = ''
+                score = engine.analyse(board, chess.engine.Limit(depth=15))['score'].white()
                 try:
-                    eval = str((engine.analyse(board, chess.engine.Limit(depth=15))['score'].white().score() / 100))
-                    csv_list.append(eval + parse_FEN(fen))
+                    eval = str(str(score.score() / 100))
                 except:
-                    print(ERROR_EVALUATION + 'moving on to next game ...')
-                    break
+                    if score.mate() > 0:
+                        eval = MATED_VALUES[1]
+                    elif score.mate() < 0:
+                        eval = MATED_VALUES[0]
+                    else:
+                        if to_move > 0:
+                            eval = MATED_VALUES[0]
+                        else:
+                            eval = MATED_VALUES[1]
+                df_l = (str(eval) + parse_FEN(fen)).split(',')
+                for (col, val) in zip(column_list, df_l):
+                    dic[col] = val
                 # According to Forsyth-Edwards Notation (FEN) on Wikipedia
                 # (https://en.wikipedia.org/wiki/Forsyth%E2%80%93Edwards_Notation)
                 # everything coming after either 'b' or 'w' is trivial to us. We only care about the current board state and
                 # what player it is next to move. Castling rights, en-passant squares and 50-move rule are not interesting.
-            write_data_to_csv(csv_list)
+                main_df = main_df.append(dic, ignore_index=True)
+        write_data_to_csv(main_df)
 
     ###
     # info = engine.analyse(board, chess.engine.Limit(depth=20))

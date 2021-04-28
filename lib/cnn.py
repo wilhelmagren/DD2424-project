@@ -19,6 +19,7 @@ class CNN:
         self.x_test = None
         self.y_test = None
         self.verbose = verbose
+        self.DEFAULT_MODEL_FILEPATH = '../model/CNN_weights'
         self.DEFAULT_FILEPATH = '../parsed_data/parsed_games_test.csv'
 
     def init_model(self):
@@ -39,6 +40,13 @@ class CNN:
 
         if self.verbose:
             print('<|\tInitializing the CNN model')
+
+    def save_model(self):
+        self.model.save_weights(self.DEFAULT_MODEL_FILEPATH)
+
+    def load_model(self):
+        self.init_model()
+        self.model.load_weights(self.DEFAULT_MODEL_FILEPATH)
 
     def model_summary(self):
         self.model.summary()
@@ -99,9 +107,11 @@ class CNN:
 def main():
     # ----- Unit testing -----
     model = CNN(verbose=True)
-    model.init_model()
+    # model.init_model()
+    model.load_model()
     model.parse_data()
-    model.batch_train(n_epochs=3)
+    # model.batch_train(n_epochs=3)
+    # model.save_model()
     # model.plot_history()
     model.model_predict()
 

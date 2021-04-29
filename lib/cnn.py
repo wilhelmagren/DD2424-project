@@ -49,7 +49,6 @@ class CNN:
         self.model.add(layers.Dense(256,activation ='relu',kernel_initializer=initializers.HeUniform()))
         self.model.add(layers.Dropout(rate=0.3))
         self.model.add(layers.Dense(1,activation='linear',kernel_initializer=initializers.HeUniform()))
-        self.model.summary()
         if self.verbose:
             print('<|\tInitializing the CNN model')
 
@@ -72,10 +71,12 @@ class CNN:
         for x in range(self.NUM_FEATURES * 8 * 8):
             column_list.append(f'x{x}')
         train = pd.read_csv(filepath, compression=compression)
-        x_train = train.loc[:, column_list]
-        y_train = train.loc[:, train.columns == 'y']
-        x_train = np.array(x_train)
-        y_train = np.array(y_train)
+        train2 = pd.read_csv('../parsed_data/1000games_batch2.csv.gz', compression=compression)
+        train4 = pd.read_csv('../parsed_data/1000games_batch4.csv.gz', compression=compression)
+        x_train = np.concatenate((train.loc[:, column_list], train2.loc[:, column_list], train4.loc[:, column_list]), axis=0)
+        y_train = np.concatenate((train.loc[:, train.columns == 'y'], train2.loc[:, train.columns == 'y'], train4.loc[:, train.columns == 'y']), axis=0)
+        x_train = x_train
+        y_train = y_train
         x_train, x_valid, y_train, y_valid = train_test_split(x_train, y_train, test_size=0.2)
         x_valid, x_test, y_valid, y_test = train_test_split(x_valid, y_valid, test_size=0.5)
         self.x_train = x_train.reshape(len(x_train), 8, 8, 7)
@@ -124,7 +125,7 @@ class CNN:
                 acc += 1
             diff.append(np.abs(target - predicted))
         print(f'<|\tModel testing accuracy:\t {100*round(float(acc)/float(len(y)), 4)}%')
-        print(f'<<\tModel mean MSE:\t\t\t {np.mean(np.array(diff))}')
+        print(f'<<\tModel mean MSE:\t\t {np.mean(np.array(diff))}')
 
 
 def main():
@@ -134,8 +135,8 @@ def main():
     model.init_model()
     # model.load_model()
     model.parse_data()
-    model.batch_train(n_epochs=10)
-    # model.save_model()
+    model.batch_train(n_epochs=20)
+    model.save_model()
     model.plot_history()
     model.model_predict()
 

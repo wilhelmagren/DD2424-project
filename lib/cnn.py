@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
 import tensorflow as tf
-from tensorflow.keras import layers, models
+from tensorflow.keras import layers, models,initializers
 from sklearn.model_selection import train_test_split
 import matplotlib.pyplot as plt
 
@@ -24,6 +24,7 @@ class CNN:
         self.DEFAULT_FILEPATH = '../parsed_data/1000games_batch1.csv.gz'
 
     def init_model(self):
+        """
         # conv2D :: n_filter=400, kernel=(4, 4)
         self.model.add(layers.Conv2D(filters=400, kernel_size=(4, 4), input_shape=(8, 8, 7)))
         # MaxPool2D :: kernel=(2, 2), stride=(2, 2)
@@ -33,12 +34,22 @@ class CNN:
         # Flatten to single output dimension
         self.model.add(layers.Flatten())
         # LinearIP :: output_dim=70, neurons=RELU
-        self.model.add(layers.Dense(units=70, activation='linear'))
+        self.model.add(layers.Dense(units=70, activation='relu'))
         # Dropout :: p=0.2
-        self.model.add(layers.Dropout(rate=0.2))
+        self.model.add(layers.Dropout(rate=0.3))
         # LinearIP :: output_dim=1, neurons=RELU
-        self.model.add(layers.Dense(units=1, activation='linear'))
-
+        self.model.add(layers.Dense(units=1))
+         """
+        self.model.add(layers.Conv2D(filters=32, kernel_size = (3,3),input_shape = (8,8,7),activation='relu',kernel_initializer=initializers.HeUniform()))
+        self.model.add(layers.AveragePooling2D(pool_size = (2,2),strides=(1,1)))
+        self.model.add(layers.Dropout(rate=0.3))
+        self.model.add(layers.Conv2D(filters=64,kernel_size = (3,3),activation='relu',kernel_initializer=initializers.HeUniform()))
+        self.model.add(layers.AveragePooling2D(pool_size = (2,2)))
+        self.model.add(layers.Flatten())
+        self.model.add(layers.Dense(256,activation ='relu',kernel_initializer=initializers.HeUniform()))
+        self.model.add(layers.Dropout(rate=0.3))
+        self.model.add(layers.Dense(1,activation='linear',kernel_initializer=initializers.HeUniform()))
+        self.model.summary()
         if self.verbose:
             print('<|\tInitializing the CNN model')
 
@@ -106,20 +117,24 @@ class CNN:
                   f'predictions and target note same length.'
                   f'\n\t\tlen(prediction)={len(y)} :: len(target)={len(self.y_test)}')
         acc = 0
+        diff = []
         for (target, predicted) in zip(self.y_test, y):
             print(f'target={target} :: predicted={predicted}')
             if target - offset <= predicted <= target + offset:
                 acc += 1
-        print(f'<|\tModel testing accuracy: {100*round(float(acc)/float(len(y)), 4)}%')
+            diff.append(np.abs(target - predicted))
+        print(f'<|\tModel testing accuracy:\t {100*round(float(acc)/float(len(y)), 4)}%')
+        print(f'<<\tModel mean MSE:\t\t\t {np.mean(np.array(diff))}')
 
 
 def main():
     # ----- Unit testing -----
+
     model = CNN(verbose=True)
     model.init_model()
     # model.load_model()
     model.parse_data()
-    model.batch_train(n_epochs=30)
+    model.batch_train(n_epochs=10)
     # model.save_model()
     model.plot_history()
     model.model_predict()

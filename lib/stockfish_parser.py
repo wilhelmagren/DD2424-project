@@ -6,16 +6,16 @@ import chess.engine
 import chess.pgn
 from tqdm import tqdm
 import pandas as pd
-import time
 
 DATA_FILEPATH = '../data/'
 STOCKFISH_FILEPATH = '../stockfish/stockfish_13_win_x64_avx2.exe'
-CSV_FILEPATH = '../parsed_data/1000games_batch1.csv.gz'
+CSV_FILEPATH = '../parsed_data/1000games_batch2.csv.gz'
 ERROR_FEN = '<| ERROR: incorrect FEN string format, '
 ERROR_FEATURE = '<| ERROR: incorrect feature length, '
 ERROR_CSV = '<| ERROR: incorrect length of csv row, '
 ERROR_EVALUATION = '<| ERROR: could not evaluate position, '
 NUM_GAMES = 1000
+SKIP_GAMES = 1000
 NUM_FEATURES = 7
 
 pgn_list = ['ficsgamesdb_2020_chess_nomovetimes_201347.pgn',
@@ -107,8 +107,14 @@ def parse_data():
         column_list.append(f'x{x}')
     main_df = pd.DataFrame(columns=column_list)
     engine = chess.engine.SimpleEngine.popen_uci(STOCKFISH_FILEPATH)
+
     with open(DATA_FILEPATH + pgn_list[0]) as pgn:
+        print('<| Removing all pre-parsed games ...')
+        for _ in range(SKIP_GAMES):
+            game = chess.pgn.read_game(pgn)
+        print('<| Done! Parsing all games now ... \n')
         for _ in tqdm(range(NUM_GAMES)):
+            dic_list = []
             game = chess.pgn.read_game(pgn)
             board = game.board()
             for idx, move in enumerate(game.mainline_moves()):
@@ -137,7 +143,9 @@ def parse_data():
                 # (https://en.wikipedia.org/wiki/Forsyth%E2%80%93Edwards_Notation)
                 # everything coming after either 'b' or 'w' is trivial to us. We only care about the current board state and
                 # what player it is next to move. Castling rights, en-passant squares and 50-move rule are not interesting.
-                main_df = main_df.append(dic, ignore_index=True)
+                dic_list.append(dic)
+            for dicc in dic_list:
+                main_df = main_df.append(dicc, ignore_index=True)
         write_data_to_csv(main_df)
 
     ###

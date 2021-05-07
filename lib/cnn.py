@@ -70,7 +70,7 @@ class CNN:
         for idx in range(1, 7):
             print(f'<|\tParsing the data from filepath :: {self.DEFAULT_FILEPATH.replace("Q", f"{idx}")}')
             data.append(pd.read_csv(self.DEFAULT_FILEPATH.replace('Q', f'{idx}')))
-        # data.append(pd.read_csv('../parsed_data/2000games'))
+        data.append(pd.read_csv('../parsed_data/2000games_batch7.csv.gz'))
         train_x = []
         train_y = []
         for dat in data:
@@ -106,8 +106,9 @@ class CNN:
             if loss is None:
                 print(f'<|\t\tNo loss specified\t\t\t=>  using default: {self.loss}')
             loss = self.loss
+        callback = tf.keras.callbacks.EarlyStopping(monitor='loss', patience=4)
         self.model.compile(optimizer=optimizer, loss=loss)
-        self.history = self.model.fit(self.x_train, self.y_train, epochs=n_epochs, validation_data=(self.x_validation, self.y_validation))
+        self.history = self.model.fit(self.x_train, self.y_train, epochs=n_epochs, validation_data=(self.x_validation, self.y_validation), callbacks=[callback])
 
     def plot_history(self, hist_type='loss', xlabel='epoch', ylabel='loss'):
         plt.plot(self.history.history[hist_type], label=hist_type)
@@ -132,7 +133,7 @@ class CNN:
                 acc += 1
             diff.append(np.abs(target - predicted))
         print(f'<|\tModel testing accuracy:\t {100*round(float(acc)/float(len(y)), 4)}%')
-        print(f'<<\tModel mean MSE:\t\t {np.mean(np.array(diff))}')
+        print(f'<|\tModel mean error:\t\t {np.mean(np.array(diff))}')
 
 
 def main():
@@ -142,7 +143,7 @@ def main():
     model.init_model()
     # model.load_model()
     model.parse_data()
-    model.batch_train(n_epochs=40)
+    model.batch_train(n_epochs=60)
     model.save_model()
     model.plot_history()
     model.model_predict()

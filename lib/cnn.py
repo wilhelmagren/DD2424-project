@@ -1,3 +1,4 @@
+import os
 import pandas as pd
 import numpy as np
 import tensorflow as tf
@@ -22,6 +23,7 @@ class CNN:
         self.target_std = 0
         self.verbose = verbose
         self.NUM_FEATURES = 7
+        self.PLOT_MODEL_FILEPATH = '../images/CNN.png'
         self.DEFAULT_MODEL_FILEPATH = '../model/CNN_weights'
         self.DEFAULT_FILEPATH = '../parsed_data/1000games_batchQ.csv.gz'
 
@@ -77,10 +79,10 @@ class CNN:
         column_list = []
         for x in range(self.NUM_FEATURES * 8 * 8):
             column_list.append(f'x{x}')
-        for idx in range(1, 7):
-            print(f'<|\tParsing the data from filepath :: {self.DEFAULT_FILEPATH.replace("Q", f"{idx}")}')
-            data.append(pd.read_csv(self.DEFAULT_FILEPATH.replace('Q', f'{idx}')))
-        data.append(pd.read_csv('../parsed_data/2000games_batch7.csv.gz'))
+        for file in os.listdir('../parsed_data/'):
+            if '1000games' in file or '2000games' in file:
+                print(f'<|\tParsing data from filepath :: ../parsed_data/{file}')
+                data.append(pd.read_csv('../parsed_data/'+file))
         train_x = []
         train_y = []
         for dat in data:
@@ -135,6 +137,11 @@ class CNN:
         plt.ylabel('num labels')
         plt.show()
 
+    def plot_model(self, filepath=None):
+        if filepath is None:
+            filepath = self.PLOT_MODEL_FILEPATH
+        tf.keras.utils.plot_model(self.model, to_file=filepath, show_shapes=True, rankdir='LR')
+
     def model_predict(self, offset=0.5):
         y = self.model.predict(self.x_test)
 
@@ -167,12 +174,13 @@ def main():
     # model.load_model()
     model.parse_data()
     # model.plot_histogram()
-    #"""
+    model.plot_model()
+    """
     model.batch_train(n_epochs=40)
     model.save_model()
     model.plot_history()
     model.model_predict()
-    #"""
+    """
 
 
 if __name__ == '__main__':

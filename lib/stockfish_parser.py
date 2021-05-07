@@ -9,13 +9,13 @@ import pandas as pd
 
 DATA_FILEPATH = '../data/'
 STOCKFISH_FILEPATH = '../stockfish/stockfish_13_win_x64_avx2.exe'
-CSV_FILEPATH = '../parsed_data/1000games_batch2.csv.gz'
+CSV_FILEPATH = '../parsed_data/1000games_batch5.csv.gz'
 ERROR_FEN = '<| ERROR: incorrect FEN string format, '
 ERROR_FEATURE = '<| ERROR: incorrect feature length, '
 ERROR_CSV = '<| ERROR: incorrect length of csv row, '
 ERROR_EVALUATION = '<| ERROR: could not evaluate position, '
 NUM_GAMES = 1000
-SKIP_GAMES = 1000
+SKIP_GAMES = 4000
 NUM_FEATURES = 7
 
 pgn_list = ['ficsgamesdb_2020_chess_nomovetimes_201347.pgn',
@@ -114,9 +114,9 @@ def parse_data():
             game = chess.pgn.read_game(pgn)
         print('<| Done! Parsing all games now ... \n')
         for _ in tqdm(range(NUM_GAMES)):
-            dic_list = []
             game = chess.pgn.read_game(pgn)
             board = game.board()
+            dic_list = []
             for idx, move in enumerate(game.mainline_moves()):
                 board.push(move)
                 fen = board.fen()
@@ -147,7 +147,6 @@ def parse_data():
             for dicc in dic_list:
                 main_df = main_df.append(dicc, ignore_index=True)
         write_data_to_csv(main_df)
-
     ###
     # info = engine.analyse(board, chess.engine.Limit(depth=20))
     # print('score:', float((info['score'].white().score()/100)))

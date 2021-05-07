@@ -44,22 +44,28 @@ class KNN:
     def model_summary(self):
         self.model.summary()
 
-    def parse_data(self, filepath=None, compression='gzip'):
-        if filepath is None:
-            filepath = self.DEFAULT_FILEPATH
-        if self.verbose:
-            print(f'<|\tParsing the data from filepath :: {filepath}')
+    def read_files(self):
+        data = []
         column_list = []
         for x in range(self.NUM_FEATURES * 8 * 8):
             column_list.append(f'x{x}')
-        train = pd.read_csv('../parsed_data/1000games_batch1.csv.gz', compression=compression)
-        train2 = pd.read_csv('../parsed_data/1000games_batch2.csv.gz', compression=compression)
-        train3 = pd.read_csv('../parsed_data/1000games_batch3.csv.gz', compression=compression)
-        train4 = pd.read_csv('../parsed_data/1000games_batch4.csv.gz', compression=compression)
-        x_train = np.concatenate((train.loc[:, column_list], train2.loc[:, column_list], train3.loc[:, column_list], train4.loc[:, column_list]), axis=0)
-        y_train = np.concatenate((train.loc[:, train.columns == 'y'], train2.loc[:, train.columns == 'y'], train3.loc[:, train.columns == 'y'], train4.loc[:, train.columns == 'y']), axis=0)
-        x_train = x_train
-        y_train = y_train
+        for idx in range(1, 7):
+            print(f'<|\tParsing the data from filepath :: {self.DEFAULT_FILEPATH.replace("Q", f"{idx}")}')
+            data.append(pd.read_csv(self.DEFAULT_FILEPATH.replace('Q', f'{idx}')))
+        # data.append(pd.read_csv('../parsed_data/2000games'))
+        train_x = []
+        train_y = []
+        for dat in data:
+            train_x.append(dat.loc[:, column_list])
+            train_y.append(dat.loc[:, dat.columns == 'y'])
+        return train_x, train_y
+
+    def parse_data(self, filepath=None, compression='gzip'):
+        if filepath is None:
+            filepath = self.DEFAULT_FILEPATH
+        x_data, y_data = self.read_files()
+        x_train = np.concatenate(x_data, axis=0)
+        y_train = np.concatenate(y_data, axis=0)
         x_train, x_valid, y_train, y_valid = train_test_split(x_train, y_train, test_size=0.2)
         x_valid, x_test, y_valid, y_test = train_test_split(x_valid, y_valid, test_size=0.5)
         self.x_train = x_train

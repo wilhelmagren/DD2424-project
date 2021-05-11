@@ -32,7 +32,7 @@ class CNN:
         # conv2D :: n_filter=400, kernel=(4, 4)
         self.model.add(layers.Conv2D(filters=400, kernel_size=(4, 4), input_shape=(8, 8, 7)))
         # MaxPool2D :: kernel=(2, 2), stride=(2, 2)
-        self.model.add(layers.MaxPool2D(pool_size=(2, 2), strides=(2, 2)))
+        self.model.add(layers.AveragePooling2D(pool_size=(2, 2), strides=(1, 1)))
         # conv2D :: n_filter=200, kernel=(2, 2)
         self.model.add(layers.Conv2D(filters=200, kernel_size=(2, 2)))
         # Flatten to single output dimension
@@ -44,15 +44,15 @@ class CNN:
         # LinearIP :: output_dim=1, neurons=RELU
         self.model.add(layers.Dense(units=1))
          """
-        self.model.add(layers.Conv2D(filters=32, kernel_size = (3,3),input_shape = (8,8,7),activation='relu',kernel_initializer=initializers.HeUniform()))
-        self.model.add(layers.AveragePooling2D(pool_size = (2,2),strides=(1,1)))
+        self.model.add(layers.Conv2D(filters=32, kernel_size=(3, 3), input_shape=(8, 8, 7), activation='relu', kernel_initializer=initializers.HeUniform()))
+        self.model.add(layers.AveragePooling2D(pool_size=(2, 2), strides=(1, 1)))
         self.model.add(layers.Dropout(rate=0.3))
-        self.model.add(layers.Conv2D(filters=64,kernel_size = (3,3),activation='relu',kernel_initializer=initializers.HeUniform()))
-        self.model.add(layers.AveragePooling2D(pool_size = (2,2)))
+        # self.model.add(layers.Conv2D(filters=64, kernel_size=(3, 3), activation='relu', kernel_initializer=initializers.HeUniform()))
+        # self.model.add(layers.AveragePooling2D(pool_size=(2, 2)))
         self.model.add(layers.Flatten())
-        self.model.add(layers.Dense(256,activation ='relu',kernel_initializer=initializers.HeUniform()))
+        self.model.add(layers.Dense(256, activation='relu', kernel_initializer=initializers.HeUniform()))
         self.model.add(layers.Dropout(rate=0.3))
-        self.model.add(layers.Dense(1,activation='linear',kernel_initializer=initializers.HeUniform()))
+        self.model.add(layers.Dense(1, activation='linear', kernel_initializer=initializers.HeUniform()))
         if self.verbose:
             print('<|\tInitializing the CNN model')
 
@@ -90,7 +90,7 @@ class CNN:
             train_y.append(dat.loc[:, dat.columns == 'y'])
         return train_x, train_y
 
-    def parse_data(self, filepath=None, compression='gzip'):
+    def parse_data(self, filepath=None):
         if filepath is None:
             filepath = self.DEFAULT_FILEPATH
         x_data, y_data = self.read_files()
@@ -162,7 +162,7 @@ class CNN:
             diff_vanilla.append(np.abs(target_vanilla - predicted_vanilla))
             print(f'\t{predicted}  =>  {predicted_vanilla}  vs  {target_vanilla}')
         # print(f'<|\tModel testing accuracy:\t {100*round(float(acc)/float(len(y)), 4)}%')
-        print(f'<|\tModel mean error normalized:\t\t {np.mean(np.array(diff))}')
+        print(f'<|\tModel mean error:\t\t {np.mean(np.array(diff))}')
         print(f'<|\tModel mean error:\t\t\t {np.mean(np.array(diff_vanilla))}')
 
 
@@ -174,13 +174,14 @@ def main():
     # model.load_model()
     model.parse_data()
     # model.plot_histogram()
-    model.plot_model()
-    """
+    #model.plot_model()
+    #"""
     model.batch_train(n_epochs=40)
-    model.save_model()
+    # model.save_model()
     model.plot_history()
     model.model_predict()
-    """
+    #"""
+    # Do classification, dataproblems? how can we solve it => regression
 
 
 if __name__ == '__main__':

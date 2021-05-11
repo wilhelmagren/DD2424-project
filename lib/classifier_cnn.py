@@ -9,9 +9,10 @@ import matplotlib.pyplot as plt
 
 class CNN:
     def __init__(self, verbose=False):
+        self.lr = tf.keras.optimizers.schedules.InverseTimeDecay(initial_learning_rate=0.001, decay_rate=0.5, decay_steps=1.0)
         self.model = models.Sequential()
-        self.optimizer = 'adam'
-        self.loss = tf.keras.losses.MSE
+        self.optimizer = tf.keras.optimizers.Adam(learning_rate=self.lr)
+        self.loss = tf.keras.losses.BinaryCrossentropy()
         self.history = None
         self.x_train = None
         self.y_train = None
@@ -28,7 +29,6 @@ class CNN:
         self.DEFAULT_FILEPATH = '../parsed_data/1000games_batchQ.csv.gz'
 
     def init_model(self):
-        """
         # conv2D :: n_filter=400, kernel=(4, 4)
         self.model.add(layers.Conv2D(filters=400, kernel_size=(4, 4), input_shape=(8, 8, 7)))
         # MaxPool2D :: kernel=(2, 2), stride=(2, 2)
@@ -42,17 +42,7 @@ class CNN:
         # Dropout :: p=0.2
         self.model.add(layers.Dropout(rate=0.3))
         # LinearIP :: output_dim=1, neurons=RELU
-        self.model.add(layers.Dense(units=1))
-         """
-        self.model.add(layers.Conv2D(filters=32, kernel_size=(3, 3), input_shape=(8, 8, 7), activation='relu', kernel_initializer=initializers.HeUniform()))
-        self.model.add(layers.AveragePooling2D(pool_size=(2, 2), strides=(1, 1)))
-        self.model.add(layers.Dropout(rate=0.3))
-        # self.model.add(layers.Conv2D(filters=64, kernel_size=(3, 3), activation='relu', kernel_initializer=initializers.HeUniform()))
-        # self.model.add(layers.AveragePooling2D(pool_size=(2, 2)))
-        self.model.add(layers.Flatten())
-        self.model.add(layers.Dense(256, activation='relu', kernel_initializer=initializers.HeUniform()))
-        self.model.add(layers.Dropout(rate=0.3))
-        self.model.add(layers.Dense(1, activation='linear', kernel_initializer=initializers.HeUniform()))
+        self.model.add(layers.Dense(units=1, activation='sigmoid'))
         if self.verbose:
             print('<|\tInitializing the CNN model')
 
@@ -67,11 +57,11 @@ class CNN:
         self.model.summary()
 
     def normalize_labels(self, labels):
-        labels[labels > 80] = 80
-        labels[labels < -80] = -80
-        self.target_mean = np.mean(labels)
-        self.target_std = np.std(labels)
-        labels = (labels - np.mean(labels))/np.std(labels)
+        labels[labels >= 0] = 1
+        labels[labels < 0] = 0
+        # self.target_mean = np.mean(labels)
+        # self.target_std = np.std(labels)
+        # labels = (labels - np.mean(labels))/np.std(labels)
         return labels
 
     def read_files(self):
@@ -110,17 +100,9 @@ class CNN:
             print(f'<|\t\tNumber of training samples :: {len(self.x_validation)}')
             print(f'<|\t\tNumber of training samples :: {len(self.x_test)}')
 
-    def batch_train(self, optimizer=None, loss=None, n_epochs=10):
-        if self.verbose:
-            print(f'<|\tTraining the model utilizing big batch')
-            if optimizer is None:
-                print(f'<|\t\tNo optimizer specified\t\t=>  using default: {self.optimizer}')
-                optimizer = self.optimizer
-            if loss is None:
-                print(f'<|\t\tNo loss specified\t\t\t=>  using default: {self.loss}')
-            loss = self.loss
+    def batch_train(self, n_epochs=10):
         callback = tf.keras.callbacks.EarlyStopping(monitor='loss', patience=3)
-        self.model.compile(optimizer=optimizer, loss=loss)
+        self.model.compile(optimizer=self.optimizer, loss=self.loss)
         self.history = self.model.fit(self.x_train, self.y_train, epochs=n_epochs, validation_data=(self.x_validation, self.y_validation), callbacks=[callback])
 
     def plot_history(self, hist_type='loss', xlabel='epoch', ylabel='loss'):
@@ -142,7 +124,7 @@ class CNN:
             filepath = self.PLOT_MODEL_FILEPATH
         tf.keras.utils.plot_model(self.model, to_file=filepath, show_shapes=True, rankdir='LR')
 
-    def model_predict(self, offset=0.5):
+    def model_predict(self):
         y = self.model.predict(self.x_test)
 
         assert len(y) == len(self.y_test), \
@@ -151,19 +133,14 @@ class CNN:
                   f'\n\t\tlen(prediction)={len(y)} :: len(target)={len(self.y_test)}')
         acc = 0
         diff = []
-        diff_vanilla = []
         for (target, predicted) in zip(self.y_test, y):
-            #print(f'target={target} :: predicted={predicted}')
-            #if target - offset <= predicted <= target + offset:
-            #    acc += 1
-            target_vanilla = (target + self.target_mean)*self.target_std
-            predicted_vanilla = (predicted + self.target_mean)*self.target_std
+            print(f'target={target} :: predicted={predicted}')
+            if target == 0 and predicted < 0.5:
+                acc += 1
+            if target == 1 and predicted > 0.5:
+                acc += 1
             diff.append(np.abs(target - predicted))
-            diff_vanilla.append(np.abs(target_vanilla - predicted_vanilla))
-            print(f'\t{predicted}  =>  {predicted_vanilla}  vs  {target_vanilla}')
-        # print(f'<|\tModel testing accuracy:\t {100*round(float(acc)/float(len(y)), 4)}%')
-        print(f'<|\tModel mean error:\t\t {np.mean(np.array(diff))}')
-        print(f'<|\tModel mean error:\t\t\t {np.mean(np.array(diff_vanilla))}')
+        print(f'<|\tModel testing accuracy:\t {100*round(float(acc)/float(len(y)), 4)}%')
 
 
 def main():
@@ -176,7 +153,7 @@ def main():
     # model.plot_histogram()
     #model.plot_model()
     #"""
-    model.batch_train(n_epochs=40)
+    model.batch_train(n_epochs=1)
     # model.save_model()
     model.plot_history()
     model.model_predict()

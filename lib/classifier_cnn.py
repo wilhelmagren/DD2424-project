@@ -59,8 +59,8 @@ class CNN:
     def plot_diff(self, w, b):
         print(f'baseline: {(w/(w+b))*100}%')
         labels = ['black win', 'white win']
-        plt.bar(labels, [b, w])
-        plt.legend()
+        plt.bar(labels, [b/(w+b), w/(w+b)])
+        plt.title('data distribution')
         plt.show()
 
     def normalize_labels(self, labels):

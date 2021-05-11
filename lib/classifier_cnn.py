@@ -56,9 +56,24 @@ class CNN:
     def model_summary(self):
         self.model.summary()
 
+    def plot_diff(self, w, b):
+        print(f'baseline: {(w/(w+b))*100}%')
+        labels = ['black win', 'white win']
+        plt.bar(labels, [b, w])
+        plt.legend()
+        plt.show()
+
     def normalize_labels(self, labels):
         labels[labels >= 0] = 1
         labels[labels < 0] = 0
+        num_white = 0
+        for i in range(labels.shape[0]):
+            for j in range(labels.shape[1]):
+                if labels[i, j] == 1:
+                    num_white += 1
+
+        num_black = len(labels) - num_white
+        self.plot_diff(num_white, num_black)
         # self.target_mean = np.mean(labels)
         # self.target_std = np.std(labels)
         # labels = (labels - np.mean(labels))/np.std(labels)
@@ -135,6 +150,7 @@ class CNN:
         diff = []
         for (target, predicted) in zip(self.y_test, y):
             print(f'target={target} :: predicted={predicted}')
+
             if target == 0 and predicted < 0.5:
                 acc += 1
             if target == 1 and predicted > 0.5:

@@ -142,17 +142,10 @@ def parse_data():
                 df_l = (str(eval) + parse_FEN(fen)).split(',')
                 for (col, val) in zip(column_list, df_l):
                     dic[col] = val
-                # According to Forsyth-Edwards Notation (FEN) on Wikipedia
-                # (https://en.wikipedia.org/wiki/Forsyth%E2%80%93Edwards_Notation)
-                # everything coming after either 'b' or 'w' is trivial to us. We only care about the current board state and
-                # what player it is next to move. Castling rights, en-passant squares and 50-move rule are not interesting.
                 dic_list.append(dic)
             for dicc in dic_list:
                 main_df = main_df.append(dicc, ignore_index=True)
         write_data_to_csv(main_df)
-    ###
-    # info = engine.analyse(board, chess.engine.Limit(depth=20))
-    # print('score:', float((info['score'].white().score()/100)))
     engine.quit()
     ###
 

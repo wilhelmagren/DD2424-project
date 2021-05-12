@@ -9,13 +9,14 @@ import pandas as pd
 
 DATA_FILEPATH = '../data/'
 STOCKFISH_FILEPATH = '../stockfish/stockfish_13_win_x64_avx2.exe'
-CSV_FILEPATH = '../parsed_data/1000games_batch5.csv.gz'
+CSV_FILEPATH = '../parsed_data/1000games_TRIMMED2019_batch1.csv.gz'
 ERROR_FEN = '<| ERROR: incorrect FEN string format, '
 ERROR_FEATURE = '<| ERROR: incorrect feature length, '
 ERROR_CSV = '<| ERROR: incorrect length of csv row, '
 ERROR_EVALUATION = '<| ERROR: could not evaluate position, '
 NUM_GAMES = 1000
-SKIP_GAMES = 4000
+SKIP_GAMES = 0
+SKIP_FIRST_POSITIONS = 10
 NUM_FEATURES = 7
 
 pgn_list = ['ficsgamesdb_2020_chess_nomovetimes_201347.pgn',
@@ -108,8 +109,8 @@ def parse_data():
     main_df = pd.DataFrame(columns=column_list)
     engine = chess.engine.SimpleEngine.popen_uci(STOCKFISH_FILEPATH)
 
-    with open(DATA_FILEPATH + pgn_list[0]) as pgn:
-        print('<| Removing all pre-parsed games ...')
+    with open(DATA_FILEPATH + pgn_list[1]) as pgn:
+        print('<| Skipping all pre-parsed games ...')
         for _ in range(SKIP_GAMES):
             game = chess.pgn.read_game(pgn)
         print('<| Done! Parsing all games now ... \n')
@@ -136,6 +137,8 @@ def parse_data():
                             eval = MATED_VALUES[0]
                         else:
                             eval = MATED_VALUES[1]
+                if -4 < float(eval) < 4:
+                    continue
                 df_l = (str(eval) + parse_FEN(fen)).split(',')
                 for (col, val) in zip(column_list, df_l):
                     dic[col] = val

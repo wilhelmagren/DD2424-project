@@ -40,7 +40,7 @@ class CNN:
         # MaxPool2D :: kernel=(2, 2), stride=(2, 2)
         self.model.add(layers.AveragePooling2D(pool_size=(3, 3), strides=(2, 2)))
         # conv2D :: n_filter=200, kernel=(2, 2)
-        self.model.add(layers.Conv2D(filters=258, kernel_size=(2, 2), activation='relu', padding='same'))
+        self.model.add(layers.Conv2D(filters=256, kernel_size=(2, 2), activation='relu', padding='same'))
         # self.model.add(layers.BatchNormalization(axis=3)) if self.BN else None
         # Flatten to single output dimension
         self.model.add(layers.Flatten())
@@ -152,9 +152,9 @@ class CNN:
         self.model.compile(optimizer=self.optimizer, loss=self.loss, metrics=['accuracy'])
         self.history = self.model.fit(self.x_train, self.y_train, epochs=n_epochs, validation_data=(self.x_validation, self.y_validation), callbacks=[callback], batch_size=128)
 
-    def plot_history(self, hist_type='loss', xlabel='iteration', ylabel='Cross Entropy'):
-        plt.plot(self.history.history[hist_type], label=hist_type)
-        plt.plot(self.history.history[f'val_{hist_type}'], label=f'val_{hist_type}')
+    def plot_history(self, hist_type='loss', xlabel='epochs', ylabel='Cross entropy loss'):
+        plt.plot(self.history.history[hist_type], label=f'training {hist_type}', linewidth=1, color='maroon')
+        plt.plot(self.history.history[f'val_{hist_type}'], label=f'validation {hist_type}', linewidth=1, color='navy')
         plt.xlabel(xlabel)
         plt.ylabel(ylabel)
         plt.legend()
@@ -196,7 +196,7 @@ def main():
     # model.load_model()
     model.parse_data()
     # model.plot_histogram()
-    # model.plot_model()
+    model.plot_model()
     # model.model_summary()
     #"""
     model.batch_train(n_epochs=25)

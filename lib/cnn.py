@@ -10,8 +10,9 @@ import matplotlib.pyplot as plt
 class CNN:
     def __init__(self, verbose=False):
         self.model = models.Sequential()
-        self.optimizer = 'adam'
-        self.loss = tf.keras.losses.Huber()
+        self.optimizer = tf.keras.optimizers.SGD(learning_rate=0.01, momentum=0.01)
+        self.loss = tf.keras.losses.Huber(delta=1)
+        self.initializer = initializers.HeNormal()
         self.history = None
         self.x_train = None
         self.y_train = None
@@ -30,20 +31,23 @@ class CNN:
     def init_model(self):
         """
         # conv2D :: n_filter=400, kernel=(4, 4)
-        self.model.add(layers.Conv2D(filters=400, kernel_size=(4, 4), input_shape=(8, 8, 7)))
+        self.model.add(layers.Conv2D(filters=512, kernel_size=(4, 4), input_shape=(8, 8, 7), activation='relu', padding='same'))
+        # self.model.add(layers.BatchNormalization()) if self.BN else None
         # MaxPool2D :: kernel=(2, 2), stride=(2, 2)
-        self.model.add(layers.AveragePooling2D(pool_size=(2, 2), strides=(1, 1)))
+        self.model.add(layers.AveragePooling2D(pool_size=(3, 3), strides=(2, 2)))
         # conv2D :: n_filter=200, kernel=(2, 2)
-        self.model.add(layers.Conv2D(filters=200, kernel_size=(2, 2)))
+        self.model.add(layers.Conv2D(filters=256, kernel_size=(2, 2), activation='relu', padding='same'))
+        # self.model.add(layers.BatchNormalization(axis=3)) if self.BN else None
         # Flatten to single output dimension
         self.model.add(layers.Flatten())
         # LinearIP :: output_dim=70, neurons=RELU
-        self.model.add(layers.Dense(units=70, activation='relu'))
+        self.model.add(layers.Dense(units=70, activation='relu', kernel_initializer=self.initializer))
+        # self.model.add(layers.BatchNormalization()) if self.BN else None
         # Dropout :: p=0.2
         self.model.add(layers.Dropout(rate=0.3))
         # LinearIP :: output_dim=1, neurons=RELU
-        self.model.add(layers.Dense(units=1))
-         """
+        self.model.add(layers.Dense(units=1, activation='linear', kernel_initializer=self.initializer))
+        """
         self.model.add(layers.Conv2D(filters=32, kernel_size=(3, 3), input_shape=(8, 8, 7), activation='relu', kernel_initializer=initializers.HeUniform()))
         self.model.add(layers.AveragePooling2D(pool_size=(2, 2), strides=(1, 1)))
         self.model.add(layers.Dropout(rate=0.3))
@@ -53,6 +57,7 @@ class CNN:
         self.model.add(layers.Dense(256, activation='relu', kernel_initializer=initializers.HeUniform()))
         self.model.add(layers.Dropout(rate=0.3))
         self.model.add(layers.Dense(1, activation='linear', kernel_initializer=initializers.HeUniform()))
+        #"""
         if self.verbose:
             print('<|\tInitializing the CNN model')
 
@@ -67,8 +72,8 @@ class CNN:
         self.model.summary()
 
     def normalize_labels(self, labels):
-        labels[labels > 80] = 80
-        labels[labels < -80] = -80
+        labels[labels > 80] = 60
+        labels[labels < -80] = -60
         # self.target_mean = np.mean(labels)
         # self.target_std = np.std(labels)
         # labels = (labels - np.mean(labels))/np.std(labels)
@@ -164,18 +169,16 @@ class CNN:
 
 def main():
     # ----- Unit testing -----
-
     model = CNN(verbose=True)
-    # model.init_model()
-    model.load_model()
+    model.init_model()
+    # model.load_model()
     model.parse_data()
     # model.plot_histogram()
     # model.plot_model()
-    # model.batch_train(n_epochs=50)
-    # model.save_model()
-    # model.plot_history()
+    model.batch_train(n_epochs=20)
+    model.save_model()
+    model.plot_history()
     model.model_predict()
-    # Do classification, dataproblems? how can we solve it => regression
 
 
 if __name__ == '__main__':

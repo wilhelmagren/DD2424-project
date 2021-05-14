@@ -12,7 +12,7 @@ class CNN:
     def __init__(self, BN=False, verbose=False):
         # self.lr = tf.keras.optimizers.schedules.InverseTimeDecay(initial_learning_rate=0.001, decay_rate=0.5, decay_steps=1.0)
         self.model = models.Sequential()
-        self.optimizer = tf.keras.optimizers.SGD(learning_rate=0.01, momentum=0.01)
+        self.optimizer = tf.keras.optimizers.Adagrad(learning_rate=0.01)
         self.loss = tf.keras.losses.BinaryCrossentropy()
         self.initializer = initializers.HeNormal()
         self.history = None
@@ -34,6 +34,7 @@ class CNN:
         self.DEFAULT_FILEPATH = '../parsed_data/1000games_batchQ.csv.gz'
 
     def init_model(self):
+        """
         # conv2D :: n_filter=400, kernel=(4, 4)
         self.model.add(layers.Conv2D(filters=512, kernel_size=(4, 4), input_shape=(8, 8, 7), activation='relu', padding='same'))
         # self.model.add(layers.BatchNormalization()) if self.BN else None
@@ -51,6 +52,14 @@ class CNN:
         self.model.add(layers.Dropout(rate=0.3))
         # LinearIP :: output_dim=1, neurons=RELU
         self.model.add(layers.Dense(units=2, activation='softmax'))
+        """
+        self.model.add(layers.Conv2D(filters=32, kernel_size=(5, 5), input_shape=(8, 8, 7), activation='relu',
+                                     kernel_initializer=initializers.HeUniform()))
+        self.model.add(layers.Flatten())
+        self.model.add(layers.Dense(128, activation='linear', kernel_initializer=initializers.HeUniform()))
+        self.model.add(layers.Dropout(rate=0.3))
+        self.model.add(layers.Dense(128, activation='linear', kernel_initializer=initializers.HeUniform()))
+        self.model.add(layers.Dense(7, activation='softmax', kernel_initializer=initializers.HeUniform()))
         if self.verbose:
             print('<|\tInitializing the CNN model')
 
@@ -76,7 +85,8 @@ class CNN:
 
     def normalize_labels(self, labels):
         # labels shape (572386, 1)
-        new_labels = np.zeros((labels.shape[0], self.CLASSES))
+        new_labels = np.zeros((labels.shape[0], 7))
+        """
         for row in range(labels.shape[0]):
             if labels[row, 0] < 0:
                 new_labels[row, 0] = 1
@@ -94,7 +104,6 @@ class CNN:
             elif 2 <= labels[row, 0] < 10:
                 new_labels[row, 4] = 1
             elif -2 < labels[row, 0] < 2:
-                count += 1
                 new_labels[row, 3] = 1
             elif -10 < labels[row, 0] <= -2:
                 new_labels[row, 2] = 1
@@ -102,8 +111,8 @@ class CNN:
                 new_labels[row, 1] = 1
             elif labels[row, 0] <= -20:
                 new_labels[row, 0] = 1
-        print(f'baseline acc: {100*count/labels.shape[0]}%')
-        """
+        #print(f'baseline acc: {100*count/labels.shape[0]}%')
+        #"""
         # self.target_mean = np.mean(labels)
         # self.target_std = np.std(labels)
         # labels = (labels - np.mean(labels))/np.std(labels)
@@ -199,7 +208,7 @@ def main():
     model.plot_model()
     # model.model_summary()
     #"""
-    model.batch_train(n_epochs=25)
+    model.batch_train(n_epochs=20)
     # model.save_model()
     model.plot_history(hist_type='loss')
     model.plot_history(hist_type='accuracy')

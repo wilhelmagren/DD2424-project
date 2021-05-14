@@ -5,12 +5,13 @@ import tensorflow as tf
 from tensorflow.keras import layers, models,initializers
 from sklearn.model_selection import train_test_split
 import matplotlib.pyplot as plt
+plt.style.use('ggplot')
 
 
 class CNN:
     def __init__(self, verbose=False):
         self.model = models.Sequential()
-        self.optimizer = tf.keras.optimizers.SGD(learning_rate=0.01, momentum=0.01)
+        self.optimizer = tf.keras.optimizers.Adagrad(learning_rate=0.01)
         self.loss = tf.keras.losses.Huber(delta=1)
         self.initializer = initializers.HeNormal()
         self.history = None
@@ -48,16 +49,23 @@ class CNN:
         # LinearIP :: output_dim=1, neurons=RELU
         self.model.add(layers.Dense(units=1, activation='linear', kernel_initializer=self.initializer))
         """
-        self.model.add(layers.Conv2D(filters=32, kernel_size=(3, 3), input_shape=(8, 8, 7), activation='relu', kernel_initializer=initializers.HeUniform()))
+        """
+        self.model.add(layers.Conv2D(filters=128, kernel_size=(4, 4), input_shape=(8, 8, 7), activation='relu', kernel_initializer=initializers.HeUniform()))
         self.model.add(layers.AveragePooling2D(pool_size=(2, 2), strides=(1, 1)))
-        self.model.add(layers.Dropout(rate=0.3))
         self.model.add(layers.Conv2D(filters=64, kernel_size=(3, 3), activation='relu', kernel_initializer=initializers.HeUniform()))
         self.model.add(layers.AveragePooling2D(pool_size=(2, 2)))
         self.model.add(layers.Flatten())
-        self.model.add(layers.Dense(256, activation='relu', kernel_initializer=initializers.HeUniform()))
+        self.model.add(layers.Dense(70, activation='relu', kernel_initializer=initializers.HeUniform()))
         self.model.add(layers.Dropout(rate=0.3))
         self.model.add(layers.Dense(1, activation='linear', kernel_initializer=initializers.HeUniform()))
-        #"""
+        """
+        self.model.add(layers.Conv2D(filters=32, kernel_size=(5, 5), input_shape=(8, 8, 7), activation='relu',
+                                     kernel_initializer=initializers.HeUniform()))
+        self.model.add(layers.Flatten())
+        self.model.add(layers.Dense(128, activation='linear', kernel_initializer=initializers.HeUniform()))
+        self.model.add(layers.Dropout(rate=0.3))
+        self.model.add(layers.Dense(128, activation='linear', kernel_initializer=initializers.HeUniform()))
+        self.model.add(layers.Dense(1, activation='linear', kernel_initializer=initializers.HeUniform()))
         if self.verbose:
             print('<|\tInitializing the CNN model')
 
@@ -78,6 +86,9 @@ class CNN:
         # self.target_std = np.std(labels)
         # labels = (labels - np.mean(labels))/np.std(labels)
         return labels
+
+    def normalize_data(self, x):
+        return (x - np.mean(x))/np.std(x)
 
     def read_files(self):
         data = []
@@ -104,6 +115,7 @@ class CNN:
         x_train = x_train[indices, :]
         y_train = y_train[indices, :]
         y_train = self.normalize_labels(y_train)
+        # x_train = self.normalize_data(x_train)
         x_train, x_valid, y_train, y_valid = train_test_split(x_train, y_train, test_size=0.3)
         x_valid, x_test, y_valid, y_test = train_test_split(x_valid, y_valid, test_size=0.5)
         self.x_train = x_train.reshape(len(x_train), 8, 8, 7)
@@ -130,9 +142,9 @@ class CNN:
         self.model.compile(optimizer=optimizer, loss=loss)
         self.history = self.model.fit(self.x_train, self.y_train, epochs=n_epochs, validation_data=(self.x_validation, self.y_validation), callbacks=[callback])
 
-    def plot_history(self, hist_type='loss', xlabel='epoch', ylabel='loss'):
-        plt.plot(self.history.history[hist_type], label=hist_type)
-        plt.plot(self.history.history[f'val_{hist_type}'], label=f'val_{hist_type}')
+    def plot_history(self, hist_type='loss', xlabel='epochs', ylabel='Huber loss'):
+        plt.plot(self.history.history[hist_type], label=f'training {hist_type}', linewidth=1, color='maroon')
+        plt.plot(self.history.history[f'val_{hist_type}'], label=f'validation {hist_type}', linewidth=1, color='navy')
         plt.xlabel(xlabel)
         plt.ylabel(ylabel)
         plt.legend()
@@ -159,7 +171,7 @@ class CNN:
         acc = 0
         diff = []
         for (target, predicted) in zip(self.y_test, y):
-            print(f'target={target} :: predicted={predicted}')
+            print(f'target={round(target[0], 3)} :: predicted={round(predicted[0], 3)}')
             if target - offset <= predicted <= target + offset:
                 acc += 1
             diff.append(np.abs(target - predicted))
@@ -171,12 +183,13 @@ def main():
     # ----- Unit testing -----
     model = CNN(verbose=True)
     model.init_model()
+    model.model_summary()
     # model.load_model()
     model.parse_data()
     # model.plot_histogram()
-    # model.plot_model()
+    model.plot_model()
     model.batch_train(n_epochs=20)
-    model.save_model()
+    # model.save_model()
     model.plot_history()
     model.model_predict()
 

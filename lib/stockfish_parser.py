@@ -9,13 +9,13 @@ import pandas as pd
 
 DATA_FILEPATH = '../data/'
 STOCKFISH_FILEPATH = '../stockfish/stockfish_13_win_x64_avx2.exe'
-CSV_FILEPATH = '../parsed_data/1000games_TRIMMED2019_batch5.csv.gz'
+CSV_FILEPATH = '../parsed_data/1000games_TRIMMED2019_batch6.csv.gz'
 ERROR_FEN = '<| ERROR: incorrect FEN string format, '
 ERROR_FEATURE = '<| ERROR: incorrect feature length, '
 ERROR_CSV = '<| ERROR: incorrect length of csv row, '
 ERROR_EVALUATION = '<| ERROR: could not evaluate position, '
 NUM_GAMES = 1000
-SKIP_GAMES = 4000
+SKIP_GAMES = 5000
 SKIP_FIRST_POSITIONS = 10
 NUM_FEATURES = 7
 
@@ -137,7 +137,7 @@ def parse_data():
                             eval = MATED_VALUES[0]
                         else:
                             eval = MATED_VALUES[1]
-                if -1 < float(eval) < 1:
+                if -10 < float(eval) < 10:
                     continue
                 df_l = (str(eval) + parse_FEN(fen)).split(',')
                 for (col, val) in zip(column_list, df_l):

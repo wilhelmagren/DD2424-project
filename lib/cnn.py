@@ -59,13 +59,12 @@ class CNN:
         self.model.add(layers.Dropout(rate=0.3))
         self.model.add(layers.Dense(1, activation='linear', kernel_initializer=initializers.HeUniform()))
         """
-        self.model.add(layers.Conv2D(filters=32, kernel_size=(5, 5), input_shape=(8, 8, 7), activation='relu',
-                                     kernel_initializer=initializers.HeUniform()))
+        self.model.add(layers.Conv2D(filters=32, kernel_size=(5, 5), input_shape=(8, 8, 7), activation='relu'))  # , kernel_initializer=initializers.HeUniform()
         self.model.add(layers.Flatten())
-        self.model.add(layers.Dense(128, activation='linear', kernel_initializer=initializers.HeUniform()))
+        self.model.add(layers.Dense(128, activation='linear'))  # , kernel_initializer=initializers.HeUniform()
         self.model.add(layers.Dropout(rate=0.3))
-        self.model.add(layers.Dense(128, activation='linear', kernel_initializer=initializers.HeUniform()))
-        self.model.add(layers.Dense(1, activation='linear', kernel_initializer=initializers.HeUniform()))
+        self.model.add(layers.Dense(128, activation='linear'))  # , kernel_initializer=initializers.HeUniform()
+        self.model.add(layers.Dense(1, activation='linear'))  # , kernel_initializer=initializers.HeUniform()
         if self.verbose:
             print('<|\tInitializing the CNN model')
 
@@ -78,6 +77,7 @@ class CNN:
 
     def model_summary(self):
         self.model.summary()
+        exit()
 
     def normalize_labels(self, labels):
         labels[labels > 80] = 60
@@ -151,8 +151,8 @@ class CNN:
         plt.show()
 
     def plot_histogram(self):
-        plt.hist(self.y_test, bins=160)
-        plt.xlabel('evaluation')
+        plt.hist(self.y_test, bins=160, color='maroon')
+        plt.xlabel('target evaluation')
         plt.ylabel('num labels')
         plt.show()
 
@@ -183,12 +183,12 @@ def main():
     # ----- Unit testing -----
     model = CNN(verbose=True)
     model.init_model()
-    model.model_summary()
+    # model.model_summary()
     # model.load_model()
     model.parse_data()
-    # model.plot_histogram()
+    model.plot_histogram()
     model.plot_model()
-    model.batch_train(n_epochs=20)
+    model.batch_train(n_epochs=30)
     # model.save_model()
     model.plot_history()
     model.model_predict()

@@ -2,7 +2,7 @@ import os
 import pandas as pd
 import numpy as np
 import tensorflow as tf
-from tensorflow.keras import layers, models,initializers
+from tensorflow.keras import layers, models, initializers
 from sklearn.model_selection import train_test_split
 import matplotlib.pyplot as plt
 plt.style.use('ggplot')
@@ -59,12 +59,12 @@ class CNN:
         self.model.add(layers.Dropout(rate=0.3))
         self.model.add(layers.Dense(1, activation='linear', kernel_initializer=initializers.HeUniform()))
         """
-        self.model.add(layers.Conv2D(filters=32, kernel_size=(5, 5), input_shape=(8, 8, 7), activation='relu'))  # , kernel_initializer=initializers.HeUniform()
+        self.model.add(layers.Conv2D(filters=32, kernel_size=(5, 5), input_shape=(8, 8, 7), activation='relu', kernel_initializer=initializers.HeUniform()))  #
         self.model.add(layers.Flatten())
-        self.model.add(layers.Dense(128, activation='linear'))  # , kernel_initializer=initializers.HeUniform()
+        self.model.add(layers.Dense(128, activation='linear', kernel_initializer=initializers.HeUniform()))  #
         self.model.add(layers.Dropout(rate=0.3))
-        self.model.add(layers.Dense(128, activation='linear'))  # , kernel_initializer=initializers.HeUniform()
-        self.model.add(layers.Dense(1, activation='linear'))  # , kernel_initializer=initializers.HeUniform()
+        self.model.add(layers.Dense(128, activation='linear', kernel_initializer=initializers.HeUniform()))  #
+        self.model.add(layers.Dense(1, activation='linear', kernel_initializer=initializers.HeUniform()))  #
         if self.verbose:
             print('<|\tInitializing the CNN model')
 
@@ -176,7 +176,7 @@ class CNN:
                 acc += 1
             diff.append(np.abs(target - predicted))
         # print(f'<|\tModel testing accuracy:\t {100*round(float(acc)/float(len(y)), 4)}%')
-        print(f'<|\tModel mean error:\t\t {np.mean(np.array(diff))}')
+        print(f'<|\tModel mean absolute error:\t\t {np.mean(np.array(diff))}')
 
 
 def main():
@@ -188,7 +188,7 @@ def main():
     model.parse_data()
     model.plot_histogram()
     model.plot_model()
-    model.batch_train(n_epochs=30)
+    model.batch_train(n_epochs=40)
     # model.save_model()
     model.plot_history()
     model.model_predict()

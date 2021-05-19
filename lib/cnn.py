@@ -93,7 +93,7 @@ class CNN:
         self.model.add(layers.Conv2D(filters=32, kernel_size=(5, 5), input_shape=(8, 8, 7), activation='relu', kernel_initializer=initializers.HeUniform()))
         self.model.add(layers.Flatten())
         self.model.add(layers.Dense(128, activation='elu', kernel_initializer=initializers.HeUniform()))
-        self.model.add(layers.Dropout(rate=0.3))
+        self.model.add(layers.Dropout(rate=0.1))
         self.model.add(layers.Dense(128, activation='elu', kernel_initializer=initializers.HeUniform()))
         self.model.add(layers.Dense(1, activation='linear', kernel_initializer=initializers.HeUniform()))
         if self.verbose:
@@ -262,15 +262,15 @@ class CNN:
 
 def main():
     # ----- Unit testing -----
-    model = CNN(learning_rate=0.05, delta=0.5, normalize=False, verbose=True)
+    model = CNN(learning_rate=0.05, delta=1, normalize=False, verbose=True)
     model.init_model()
     model.model_summary()
     # model.load_model()
     model.parse_data()
     model.plot_histogram()
     model.plot_model()
-    model.batch_train(n_epochs=40)
-    # model.save_model()
+    model.batch_train(n_epochs=60)
+    model.save_model()
     model.plot_history()
     model.model_predict()
 

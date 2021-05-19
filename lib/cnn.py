@@ -27,10 +27,43 @@ plt.style.use('ggplot')
 
 
 class CNN:
-    def __init__(self, verbose=False):
+    """
+    CNN class implemented using tensorflow.keras, and handles the entire workflow of reading data,
+    training, and evaluating.
+
+    func __init__/5
+    @spec :: (float, float, boolean, boolean) => Class(CNN)
+        Sequential keras model, takes the hyperparameters eta and delta.
+        Specifies which optimizer to use for training in callable arg.
+        Verbose specifies whether or not to use prints in methods.
+
+                                    LEGACY-KÅD models below
+    MK I :
+        self.model.add(layers.Conv2D(filters=512, kernel_size=(4, 4), input_shape=(8, 8, 7), activation='relu', padding='same'))
+        self.model.add(layers.BatchNormalization()) if self.BN else None
+        self.model.add(layers.AveragePooling2D(pool_size=(3, 3), strides=(2, 2)))
+        self.model.add(layers.Conv2D(filters=256, kernel_size=(2, 2), activation='relu', padding='same'))
+        self.model.add(layers.BatchNormalization(axis=3)) if self.BN else None
+        self.model.add(layers.Flatten())
+        self.model.add(layers.Dense(units=70, activation='relu', kernel_initializer=self.initializer))
+        self.model.add(layers.BatchNormalization()) if self.BN else None
+        self.model.add(layers.Dropout(rate=0.3))
+        self.model.add(layers.Dense(units=1, activation='linear', kernel_initializer=self.initializer))
+
+    MK II :
+        self.model.add(layers.Conv2D(filters=128, kernel_size=(4, 4), input_shape=(8, 8, 7), activation='relu', kernel_initializer=initializers.HeUniform()))
+        self.model.add(layers.AveragePooling2D(pool_size=(2, 2), strides=(1, 1)))
+        self.model.add(layers.Conv2D(filters=64, kernel_size=(3, 3), activation='relu', kernel_initializer=initializers.HeUniform()))
+        self.model.add(layers.AveragePooling2D(pool_size=(2, 2)))
+        self.model.add(layers.Flatten())
+        self.model.add(layers.Dense(70, activation='relu', kernel_initializer=initializers.HeUniform()))
+        self.model.add(layers.Dropout(rate=0.3))
+        self.model.add(layers.Dense(1, activation='linear', kernel_initializer=initializers.HeUniform()))
+    """
+    def __init__(self, learning_rate, delta, normalize, verbose=False) -> None:
         self.model = models.Sequential()
-        self.optimizer = tf.keras.optimizers.Adagrad(learning_rate=0.05)
-        self.loss = tf.keras.losses.Huber(delta=1)
+        self.optimizer = tf.keras.optimizers.Adagrad(learning_rate=learning_rate)
+        self.loss = tf.keras.losses.Huber(delta=delta)
         self.initializer = initializers.HeNormal()
         self.history = None
         self.x_train = None
@@ -41,41 +74,21 @@ class CNN:
         self.y_test = None
         self.target_mean = 0
         self.target_std = 0
+        self.x_mean = 0
+        self.x_std = 0
+        self.studentized_residual = normalize
         self.verbose = verbose
         self.NUM_FEATURES = 7
         self.PLOT_MODEL_FILEPATH = '../images/CNN.png'
         self.DEFAULT_MODEL_FILEPATH = '../model/CNN_weights'
         self.DEFAULT_FILEPATH = '../parsed_data/1000games_batchQ.csv.gz'
 
-    def init_model(self):
+    def init_model(self) -> None:
         """
-        # conv2D :: n_filter=400, kernel=(4, 4)
-        self.model.add(layers.Conv2D(filters=512, kernel_size=(4, 4), input_shape=(8, 8, 7), activation='relu', padding='same'))
-        # self.model.add(layers.BatchNormalization()) if self.BN else None
-        # MaxPool2D :: kernel=(2, 2), stride=(2, 2)
-        self.model.add(layers.AveragePooling2D(pool_size=(3, 3), strides=(2, 2)))
-        # conv2D :: n_filter=200, kernel=(2, 2)
-        self.model.add(layers.Conv2D(filters=256, kernel_size=(2, 2), activation='relu', padding='same'))
-        # self.model.add(layers.BatchNormalization(axis=3)) if self.BN else None
-        # Flatten to single output dimension
-        self.model.add(layers.Flatten())
-        # LinearIP :: output_dim=70, neurons=RELU
-        self.model.add(layers.Dense(units=70, activation='relu', kernel_initializer=self.initializer))
-        # self.model.add(layers.BatchNormalization()) if self.BN else None
-        # Dropout :: p=0.2
-        self.model.add(layers.Dropout(rate=0.3))
-        # LinearIP :: output_dim=1, neurons=RELU
-        self.model.add(layers.Dense(units=1, activation='linear', kernel_initializer=self.initializer))
-        """
-        """
-        self.model.add(layers.Conv2D(filters=128, kernel_size=(4, 4), input_shape=(8, 8, 7), activation='relu', kernel_initializer=initializers.HeUniform()))
-        self.model.add(layers.AveragePooling2D(pool_size=(2, 2), strides=(1, 1)))
-        self.model.add(layers.Conv2D(filters=64, kernel_size=(3, 3), activation='relu', kernel_initializer=initializers.HeUniform()))
-        self.model.add(layers.AveragePooling2D(pool_size=(2, 2)))
-        self.model.add(layers.Flatten())
-        self.model.add(layers.Dense(70, activation='relu', kernel_initializer=initializers.HeUniform()))
-        self.model.add(layers.Dropout(rate=0.3))
-        self.model.add(layers.Dense(1, activation='linear', kernel_initializer=initializers.HeUniform()))
+        func init_model/1
+        @spec (Class(CNN)) => None
+            Adds all of the corresponding layers to the sequential model defined in __init__/5.
+            Simply modifies the class attribute self.model
         """
         self.model.add(layers.Conv2D(filters=32, kernel_size=(5, 5), input_shape=(8, 8, 7), activation='relu', kernel_initializer=initializers.HeUniform()))
         self.model.add(layers.Flatten())
@@ -86,28 +99,72 @@ class CNN:
         if self.verbose:
             print('<|\tInitializing the CNN model')
 
-    def save_model(self):
+    def save_model(self) -> None:
+        """
+        Save the model weights to file self.DEFAULT_MODEL_FILEPATH.
+        Requires the model to have been initialized, and trained for at
+        least 1 epoch such that the weights are not None.
+        Once again only modifies the class attribute self.model
+        """
         self.model.save_weights(self.DEFAULT_MODEL_FILEPATH)
 
-    def load_model(self):
+    def load_model(self) -> None:
+        """
+        Load the saved model from file self.DEFAULT_MODEL_FILEPATH.
+        Requires that the model is initialized prior to loading, because you can't load
+        the saved weights to an empty model!
+        """
         self.init_model()
         self.model.load_weights(self.DEFAULT_MODEL_FILEPATH)
 
-    def model_summary(self):
+    def model_summary(self) -> None:
+        """
+        Prints the summary of the defined model. Requires the model to have been initialized
+        prior to calling. Shows the layers, how many trainable params are in each, and the total
+        amount of trainable parameters.
+        """
         self.model.summary()
 
-    def normalize_labels(self, labels):
+    def normalize_labels(self, labels) -> np.array:
+        """
+        func normalize_labels/2
+        @spec :: (Class(CNN), np.array) => np.array
+            Shrink the extreme outliers and limit them to -60 and 60.
+            Normalize them according to the Studentized residual,
+            [https://en.wikipedia.org/wiki/Normalization_(statistics)], i.e. x = (x - mean(x))/variance(x).
+            Stores the label mean and variance in class attributes, and returns the normalized labels.
+        """
         labels[labels > 80] = 60
         labels[labels < -80] = -60
-        # self.target_mean = np.mean(labels)
-        # self.target_std = np.std(labels)
-        # labels = (labels - np.mean(labels))/np.std(labels)
+        if self.studentized_residual:
+            self.target_mean = np.mean(labels)
+            self.target_std = np.std(labels)
+            labels = (labels - np.mean(labels))/np.std(labels)
+
         return labels
 
-    def normalize_data(self, x):
-        return (x - np.mean(x))/np.std(x)
+    def normalize_data(self, x) -> np.array:
+        """
+        func normalize_data/2
+        @spec :: (Class(CNN), np.array) => np.array
+            Normalize the data according to Studentized residual,
+            similarly as func normalize_labels/2. Not sure if this is a good thing to do?
+            Then we are not representing the same board anymore, and the problem is not the
+            absolute sizes of the datapoints, but instead the amount of targets centered around 0.
+            ONLY USE THIS FOR TESTING!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        """
+        self.x_mean = np.mean(x)
+        self.x_std = np.std(x)
+        return (x - self.x_mean)/self.x_std
 
-    def read_files(self):
+    def read_files(self) -> (list, list):
+        """
+        func read_files/1
+        @spec :: (Class(CNN)) => (list, list)
+            Read all of the parsed_data found in '../parsed_data/' and extract
+            the targets and data respectively. Returns the a list of the data and
+            a list of the corresponding targets. Order of the elements are important! Can't be changed!!!
+        """
         data = []
         column_list = []
         for x in range(self.NUM_FEATURES * 8 * 8):
@@ -124,6 +181,9 @@ class CNN:
         return train_x, train_y
 
     def parse_data(self):
+        """
+        Parse the data, ye I don't know really. This is a mess...
+        """
         x_data, y_data = self.read_files()
         x_train = np.concatenate(x_data, axis=0)
         y_train = np.concatenate(y_data, axis=0)
@@ -178,27 +238,31 @@ class CNN:
             filepath = self.PLOT_MODEL_FILEPATH
         tf.keras.utils.plot_model(self.model, to_file=filepath, show_shapes=True, rankdir='LR')
 
-    def model_predict(self, offset=0.5):
+    def model_predict(self):
         y = self.model.predict(self.x_test)
 
         assert len(y) == len(self.y_test), \
             print(f'<|\t\tERROR: '
                   f'predictions and target note same length.'
                   f'\n\t\tlen(prediction)={len(y)} :: len(target)={len(self.y_test)}')
-        acc = 0
-        diff = []
+
+        diff_MAE, diff_MSE = [], []
         for (target, predicted) in zip(self.y_test, y):
-            print(f'target={round(target[0], 3)} :: predicted={round(predicted[0], 3)}')
-            if target - offset <= predicted <= target + offset:
-                acc += 1
-            diff.append(np.abs(target - predicted))
+            if self.studentized_residual:
+                vanilla_target = target*self.target_std + self.target_mean
+                vanilla_prediction = predicted*self.target_std + self.target_mean
+                print(f'real_target={round(vanilla_target[0]/1, 3)}\t::\treal_predicted={round(vanilla_prediction[0]/1, 3)}')
+            print(f'target={round(target[0]/1, 3)}\t\t::\t\tpredicted={round(predicted[0]/1, 3)}\n')
+            diff_MAE.append(np.abs(target - predicted))
+            diff_MSE.append(np.square(target - predicted))
         # print(f'<|\tModel testing accuracy:\t {100*round(float(acc)/float(len(y)), 4)}%')
-        print(f'<|\tModel mean absolute error:\t\t {np.mean(np.array(diff))}')
+        print(f'<|\tModel mean absolute error:\t\t {np.mean(np.array(diff_MAE))}')
+        print(f'<|\tModel mean square error:\t\t {np.mean(np.array(diff_MSE))}')
 
 
 def main():
     # ----- Unit testing -----
-    model = CNN(verbose=True)
+    model = CNN(learning_rate=0.05, delta=0.5, normalize=True, verbose=True)
     model.init_model()
     model.model_summary()
     # model.load_model()

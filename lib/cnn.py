@@ -1,3 +1,21 @@
+"""
++|++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ | Project work for group 70 in the course DD2424, Deep Learning in Data Science.
+ | This file implements a Convolutional Neural Network (CNN) with tensorflow.keras.
+ | The CNN is used for static evaluation of chess positions. Features loading, saving, visualization, and summary of
+ | the defined model. Uses homebrewn data do train and test. The data comes from publicly available games at the
+ | FICS Games Database and is modeled as (8x8x7). Where each position on the chess board is represented by a feature
+ | vector of length 7. That is, the channel depth of the CNN is 7.
+ |
+ | The final modeled is of the form [conv-relu]-[affine-elu-dropout-affine-elu]-linear, and achieved a
+ | Mean Absolute Error (MAE) of 4.03 after training for 40 epochs.
+ |
+ | Authors: Eric Bröndum, Christoffer Torgilsman, Wilhelm Ågren
+ | Last edited: 19/05-2021
++|++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+"""
+
+
 import os
 import pandas as pd
 import numpy as np
@@ -11,7 +29,7 @@ plt.style.use('ggplot')
 class CNN:
     def __init__(self, verbose=False):
         self.model = models.Sequential()
-        self.optimizer = tf.keras.optimizers.Adagrad(learning_rate=0.01)
+        self.optimizer = tf.keras.optimizers.Adagrad(learning_rate=0.05)
         self.loss = tf.keras.losses.Huber(delta=1)
         self.initializer = initializers.HeNormal()
         self.history = None
@@ -59,12 +77,12 @@ class CNN:
         self.model.add(layers.Dropout(rate=0.3))
         self.model.add(layers.Dense(1, activation='linear', kernel_initializer=initializers.HeUniform()))
         """
-        self.model.add(layers.Conv2D(filters=32, kernel_size=(5, 5), input_shape=(8, 8, 7), activation='relu', kernel_initializer=initializers.HeUniform()))  #
+        self.model.add(layers.Conv2D(filters=32, kernel_size=(5, 5), input_shape=(8, 8, 7), activation='relu', kernel_initializer=initializers.HeUniform()))
         self.model.add(layers.Flatten())
-        self.model.add(layers.Dense(128, activation='linear', kernel_initializer=initializers.HeUniform()))  #
+        self.model.add(layers.Dense(128, activation='elu', kernel_initializer=initializers.HeUniform()))
         self.model.add(layers.Dropout(rate=0.3))
-        self.model.add(layers.Dense(128, activation='linear', kernel_initializer=initializers.HeUniform()))  #
-        self.model.add(layers.Dense(1, activation='linear', kernel_initializer=initializers.HeUniform()))  #
+        self.model.add(layers.Dense(128, activation='elu', kernel_initializer=initializers.HeUniform()))
+        self.model.add(layers.Dense(1, activation='linear', kernel_initializer=initializers.HeUniform()))
         if self.verbose:
             print('<|\tInitializing the CNN model')
 
@@ -77,7 +95,6 @@ class CNN:
 
     def model_summary(self):
         self.model.summary()
-        exit()
 
     def normalize_labels(self, labels):
         labels[labels > 80] = 60
@@ -183,13 +200,13 @@ def main():
     # ----- Unit testing -----
     model = CNN(verbose=True)
     model.init_model()
-    # model.model_summary()
+    model.model_summary()
     # model.load_model()
     model.parse_data()
     model.plot_histogram()
     model.plot_model()
     model.batch_train(n_epochs=40)
-    # model.save_model()
+    model.save_model()
     model.plot_history()
     model.model_predict()
 

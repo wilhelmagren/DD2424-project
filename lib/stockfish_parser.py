@@ -9,13 +9,13 @@ import pandas as pd
 
 DATA_FILEPATH = '../data/'
 STOCKFISH_FILEPATH = '../stockfish/stockfish_13_win_x64_avx2.exe'
-CSV_FILEPATH = '../parsed_data/1000games_TRIMMED2019_batch6.csv.gz'
+CSV_FILEPATH = '../parsed_data/1000games_TRIMMED2019_batch8.csv.gz'
 ERROR_FEN = '<| ERROR: incorrect FEN string format, '
 ERROR_FEATURE = '<| ERROR: incorrect feature length, '
 ERROR_CSV = '<| ERROR: incorrect length of csv row, '
 ERROR_EVALUATION = '<| ERROR: could not evaluate position, '
 NUM_GAMES = 1000
-SKIP_GAMES = 5000
+SKIP_GAMES = 7000
 SKIP_FIRST_POSITIONS = 10
 NUM_FEATURES = 7
 

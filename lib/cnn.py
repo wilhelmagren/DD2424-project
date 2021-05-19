@@ -262,7 +262,7 @@ class CNN:
 
 def main():
     # ----- Unit testing -----
-    model = CNN(learning_rate=0.05, delta=0.5, normalize=True, verbose=True)
+    model = CNN(learning_rate=0.05, delta=0.5, normalize=False, verbose=True)
     model.init_model()
     model.model_summary()
     # model.load_model()
@@ -270,7 +270,7 @@ def main():
     model.plot_histogram()
     model.plot_model()
     model.batch_train(n_epochs=40)
-    model.save_model()
+    # model.save_model()
     model.plot_history()
     model.model_predict()
 

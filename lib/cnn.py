@@ -8,7 +8,7 @@
  | vector of length 7. That is, the channel depth of the CNN is 7.
  |
  | The final modeled is of the form [conv-relu]-[affine-elu-dropout-affine-elu]-linear, and achieved a
- | Mean Absolute Error (MAE) of 4.03 after training for 40 epochs.
+ | Mean Absolute Error (MAE) of 3.76 after training for 60 epochs.
  |
  | Authors: Eric Bröndum, Christoffer Torgilsman, Wilhelm Ågren
  | Last edited: 19/05-2021

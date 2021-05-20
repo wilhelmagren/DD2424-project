@@ -1,0 +1,1 @@
+Locally store the pgn files from FICS. Too large files to store on git.

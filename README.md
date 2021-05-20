@@ -32,7 +32,11 @@ which is something that tactical positions require in order to give an accurate 
 
 ### Final model results, CNN vs Stockfish 13
 
-<img src="rm_comp_1.png">
+<img src="./images/README/rm_comp_1.png">
+
+<img src="./images/README/rm_comp_2.png">
+
+<img src="./images/README/rm_comp_3.png">  
 
 
 **Authors:** Eric Bröndum, Christoffer Torgilsman, Wilhelm Ågren

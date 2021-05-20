@@ -11,7 +11,7 @@
  | Mean Absolute Error (MAE) of 3.76 after training for 60 epochs.
  |
  | Authors: Eric Bröndum, Christoffer Torgilsman, Wilhelm Ågren
- | Last edited: 19/05-2021
+ | Last edited: 20/05-2021
 +|++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 """
 

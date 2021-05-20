@@ -31,7 +31,8 @@ the static evalution, and the fact that our model both can't and won't look into
 which is something that tactical positions require in order to give an accurate evaluation.  
 
 ### Final model results, CNN vs Stockfish 13
-![cnn_vs_stockfish_comparison] (rm_comp_1.png)
+
+<img src="rm_comp_1.png">
 
 
 **Authors:** Eric Bröndum, Christoffer Torgilsman, Wilhelm Ågren

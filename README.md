@@ -30,4 +30,8 @@ chess engines whenever there are tactics present in the position. This is due to
 the static evalution, and the fact that our model both can't and won't look into future positions; 
 which is something that tactical positions require in order to give an accurate evaluation.  
 
+### Results, CNN vs Stockfish 13
+![] (C:\Users\wille\Coding\dd2424-project\images\README\rm_comp_1.png)
+
+
 **Authors:** Eric Bröndum, Christoffer Torgilsman, Wilhelm Ågren

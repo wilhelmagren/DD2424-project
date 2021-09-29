@@ -2,3 +2,4 @@ model/*
 .idea/*
 data/*
 parsed_data/bigbatch.csv
+stockfish/
